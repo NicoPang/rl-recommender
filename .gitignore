@@ -162,8 +162,5 @@ cython_debug/
 # MacOS
 .DS_Store
 
-# Large data files
-Data/
-
 #John: This like will prevent any files in 'raw' from being uploaded to github
 rl-recommender/data/raw/*
