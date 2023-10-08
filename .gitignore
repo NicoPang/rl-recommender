@@ -163,9 +163,8 @@ cython_debug/
 .DS_Store
 
 #John: This like will prevent any files in 'raw' from being uploaded to github
-data/raw/*
-data/*
-!data/raw/.gitkeep
-
-data/processed/*
-!data/processed/.gitkeep
+!datasets/raw
+!datasets/raw/.gitkeep
+!datasets/processed
+!datasets/processed/.gitkeep
+datasets/*
