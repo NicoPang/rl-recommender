@@ -162,9 +162,7 @@ cython_debug/
 # MacOS
 .DS_Store
 
-#John: This like will prevent any files in 'raw' from being uploaded to github
-!datasets/raw
-!datasets/raw/.gitkeep
-!datasets/processed
-!datasets/processed/.gitkeep
+#John: This like will prevent any files in raw & processed folders.
 datasets/*
+!datasets/raw/.gitignore
+!datasets/processed/.gitignore
