@@ -21,6 +21,7 @@ class MF(nn.Module):
             n_users, K, dtype=torch.float64
         )  # can include option sparse = True for memory
         self.item_m = nn.Embedding(n_users, K, dtype=torch.float64)
+        self.K = K
 
     def forward(self, x):
         user_ids = x[:, 0]
