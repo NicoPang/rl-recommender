@@ -1,0 +1,5 @@
+notebook==7.0.4
+numpy==1.26.0
+pandas==2.1.1
+skorch==0.15.0
+torch==2.1.0
