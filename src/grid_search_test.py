@@ -34,30 +34,28 @@ if __name__ == "__main__":
 
     # New -----------------------------------------------------------------------------
     class RecordResultsCallback(Callback):
-        def __init__(self, results_list):
+        def __init__(self, results=list(),train_lost=list(), val_loss=list(), num_epochs=list()):
             super().__init__()
-            self.results = results_list
+            self.results = results
+            self.train_lost = train_lost
+            self.val_loss = val_loss
+            self.num_epochs = num_epochs
 
         def on_epoch_begin(self, net, dataset_train, dataset_valid):
-            k_value = net.module_.K  # Access the current K value
-            print(f"Training for K = {k_value}")
+            model_K = net.module_.K
+            print(f"Training for K = {model_K}")
 
         def on_epoch_end(self, net, dataset_train, dataset_valid):
-            train_loss = net.history[-1, "train_loss"]
-            valid_loss = net.history[-1, "valid_loss"]
-            num_epochs = len(net.history)
+            self.train_lost.append(net.history[-1, "train_loss"])
+            self.val_loss.append(net.history[-1, "valid_loss"])
+            self.num_epochs.append(len(net.history))
+            
+        def on_train_end(self, net, X=None, y=None, **kwargs):
+            df = pd.DataFrame({'K': [net.module_.K], 'Train Loss': self.train_lost, 'Validation Loss': self.val_loss, 'Epochs': self.num_epochs})
+            self.results.append(df)
 
-            result = {
-                "K": net.module_.K,
-                "TrainLoss": train_loss,
-                "ValidLoss": valid_loss,
-                "NumEpochs": num_epochs,
-                "FinalModelConfig": net.module_,
-            }
 
-            self.results.append(result)
-
-    record_callback = RecordResultsCallback(results_list=[])
+    callback_results = list()
 
     model = MF_Bias(n_users=U_size, n_items=I_size, K=NUM_FEATURES, G_b=G_b)
     regressor = NeuralNetRegressor(
@@ -70,7 +68,7 @@ if __name__ == "__main__":
         max_epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         device="cuda" if torch.cuda.is_available() else "cpu",
-        callbacks=[record_callback],
+        callbacks=[RecordResultsCallback(results=callback_results)],
         history=True,
     )
 
@@ -87,9 +85,6 @@ if __name__ == "__main__":
         scoring="neg_mean_squared_error",
     )
     grid_search.fit(x, y)
-    results_df = pd.DataFrame(record_callback.results)
 
-    # Save this as well
-    best_params = grid_search.best_params_
-    best_score = grid_search.best_score_
-    best_model = grid_search.best_estimator_
+    # Save results
+    print(callback_results)
