@@ -11,11 +11,10 @@ from sklearn.model_selection import GridSearchCV, ParameterGrid
 from skorch.callbacks import Callback
 import pandas as pd
 
-EPOCHS = 1
-
+EPOCHS = 100
 CV = 2
 FEATURE_START = 2
-FEATURE_END = 5
+FEATURE_END = 21
 
 # Grid search for the number of featurers
 if __name__ == "__main__":
@@ -90,19 +89,25 @@ if __name__ == "__main__":
     grid_search.fit(x, y)
     '''
     #------ Version 2
-    '''
     class RecordResultsCallback(Callback):
         def __init__(self, results=list()):
             super().__init__()
             self.results = results
-
-        def on_epoch_begin(self, net, dataset_train, dataset_valid):
+        
+        def on_train_begin(self, net, X=None, y=None, **kwargs):
+            self.train_lost = []
+            self.val_loss = []
+            self.num_epochs = []
             model_K = net.module_.K
             print(f"Training for K = {model_K}")
+
+        '''
+        def on_epoch_begin(self, net, dataset_train, dataset_valid):
             # Clear lists at the start of a new value of K
             self.train_lost = []
             self.val_loss = []
             self.num_epochs = []
+        '''
 
         def on_epoch_end(self, net, dataset_train, dataset_valid):
             self.train_lost.append(net.history[-1, "train_loss"])
@@ -110,8 +115,8 @@ if __name__ == "__main__":
             self.num_epochs.append(len(net.history))
 
         def on_train_end(self, net, X=None, y=None, **kwargs):
-            df = pd.DataFrame({'K': [net.module_.K], 'Train Loss': self.train_lost, 'Validation Loss': self.val_loss, 'Epochs': self.num_epochs})
-            self.results.append(df)
+            df = pd.DataFrame({'K': [net.module_.K], 'Epochs': self.num_epochs, 'Train Loss': self.train_lost, 'Validation Loss': self.val_loss})
+            self.results = df
 
     param_grid = {
         "module__n_users": [U_size],
@@ -123,7 +128,6 @@ if __name__ == "__main__":
     all_results = list()
 
     for params in ParameterGrid(param_grid):
-        print(params)
         model = MF_Bias(
             n_users=params['module__n_users'],
             n_items=params['module__n_items'],
@@ -139,14 +143,15 @@ if __name__ == "__main__":
             optimizer__lr=LEARNING_RATE,
             batch_size=BATCH_SIZE,
             callbacks=[RecordResultsCallback()],
-            history=True,  # Use the default history behavior
             )
-        regressor.history.clear()
-        
-        
+            
         regressor.fit(x, y)
-        callback_results = regressor.callbacks_[0].results
+        
+        callback_results = regressor.callbacks[0].results
         all_results.append(callback_results)
     
-    #save callback_results
-    '''       
+    with pd.ExcelWriter('../rl-recommender/src/param_search.xls', engine='xlsxwriter') as writer:
+        for i, df in enumerate(all_results):
+            sheet_name = f'Sheet_{i}'
+            df.to_excel(writer, sheet_name=sheet_name, index=False) 
+    
