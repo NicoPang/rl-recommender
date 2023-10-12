@@ -11,10 +11,8 @@ from sklearn.model_selection import GridSearchCV, ParameterGrid
 from skorch.callbacks import Callback
 import pandas as pd
 
-EPOCHS = 2
+EPOCHS = 200
 CV = 2
-FEATURE_START = 2
-FEATURE_END = 5
 
 # Grid search for the number of featurers
 if __name__ == "__main__":
@@ -114,7 +112,7 @@ if __name__ == "__main__":
     param_grid = {
         "module__n_users": [U_size],
         "module__n_items": [I_size],
-        "module__K": [i for i in range(FEATURE_START, FEATURE_END) if i % 2 == 0],
+        "module__K": [2,4,5,8,16,32,50],
         "module__G_b": [G_b],
         }
 
