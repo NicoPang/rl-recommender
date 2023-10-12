@@ -10,3 +10,5 @@ def save_model_results(model, x, y, filepath, save_params = False):
     t_losses = [i['valid_loss'] for i in history]
 
     np.savez_compressed(filepath, tr_loss = tr_losses, t_loss = t_losses)
+
+    print(f'saved to {filepath}')
