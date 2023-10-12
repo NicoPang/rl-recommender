@@ -16,7 +16,7 @@ BATCH_SIZE = 64
 NUM_FEATURES = 10
 LEARNING_RATE = 0.0001
 EPOCHS = 25
-DECAY = 1e-5
+DECAY = 1e-3
 
 if __name__ == '__main__':
     
@@ -44,10 +44,15 @@ if __name__ == '__main__':
         model,
         criterion = loss_fn,
         optimizer = optimizer,
+        optimizer__param_groups = [
+            ('user_m.weight', {'weight_decay': DECAY}),
+            ('item_m.weight', {'weight_decay': DECAY})
+        ],
         optimizer__lr = LEARNING_RATE,
-        optimizer__weight_decay = DECAY,
         batch_size = BATCH_SIZE,
         max_epochs = EPOCHS
     )
+
+    print(list(regressor.get_all_learnable_params()))
     
     save_model_results(regressor, x, y, f'../results/bs{BATCH_SIZE}K{NUM_FEATURES}LR{LEARNING_RATE}E{EPOCHS}D{DECAY}.npz')
