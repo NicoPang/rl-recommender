@@ -11,10 +11,10 @@ from sklearn.model_selection import GridSearchCV, ParameterGrid
 from skorch.callbacks import Callback
 import pandas as pd
 
-EPOCHS = 100
+EPOCHS = 2
 CV = 2
 FEATURE_START = 2
-FEATURE_END = 21
+FEATURE_END = 5
 
 # Grid search for the number of featurers
 if __name__ == "__main__":
@@ -93,30 +93,23 @@ if __name__ == "__main__":
         def __init__(self, results=list()):
             super().__init__()
             self.results = results
-        
+            
         def on_train_begin(self, net, X=None, y=None, **kwargs):
             self.train_lost = []
             self.val_loss = []
             self.num_epochs = []
-            model_K = net.module_.K
-            print(f"Training for K = {model_K}")
-
-        '''
-        def on_epoch_begin(self, net, dataset_train, dataset_valid):
-            # Clear lists at the start of a new value of K
-            self.train_lost = []
-            self.val_loss = []
-            self.num_epochs = []
-        '''
+            self.model_K = net.module_.K
+            print(f"Training for K = {self.model_K}")
 
         def on_epoch_end(self, net, dataset_train, dataset_valid):
             self.train_lost.append(net.history[-1, "train_loss"])
             self.val_loss.append(net.history[-1, "valid_loss"])
-            self.num_epochs.append(len(net.history))
+            self.num_epochs.append(len(self.train_lost))
 
-        def on_train_end(self, net, X=None, y=None, **kwargs):
-            df = pd.DataFrame({'K': [net.module_.K], 'Epochs': self.num_epochs, 'Train Loss': self.train_lost, 'Validation Loss': self.val_loss})
-            self.results = df
+        def on_train_end(self, net, X=None, y=None, **kwargs):         
+            temp = {'Epochs': self.num_epochs, 'Train Loss': self.train_lost, 'Validation Loss': self.val_loss,'K': [self.model_K]}
+            df = pd.DataFrame.from_dict(temp, orient='index')
+            self.results = df.transpose()
 
     param_grid = {
         "module__n_users": [U_size],
@@ -150,8 +143,10 @@ if __name__ == "__main__":
         callback_results = regressor.callbacks[0].results
         all_results.append(callback_results)
     
+    print(all_results)
+    
     with pd.ExcelWriter('../rl-recommender/src/param_search.xls', engine='xlsxwriter') as writer:
         for i, df in enumerate(all_results):
             sheet_name = f'Sheet_{i}'
-            df.to_excel(writer, sheet_name=sheet_name, index=False) 
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
     
