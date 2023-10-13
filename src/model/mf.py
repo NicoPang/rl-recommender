@@ -2,16 +2,18 @@ import torch
 import torch.nn as nn
 
 class MF(nn.Module):
-    def __init__(self, n_users, n_items, K):
+    def __init__(self, n_users, n_items, K, dropout = 0):
         super().__init__()
         self.user_m = nn.Embedding(n_users, K, dtype = torch.float64) # can include option sparse = True for memory
         self.item_m = nn.Embedding(n_items, K, dtype = torch.float64)
+        self.drop_u = nn.Dropout(dropout)
+        self.drop_i = nn.Dropout(dropout)
     
     def forward(self, x):
         user_ids = x[:, 0]
         item_ids = x[:, 1]
-        user_embeds = self.user_m(user_ids)
-        item_embeds = self.item_m(item_ids)
+        user_embeds = self.drop_u(self.user_m(user_ids))
+        item_embeds = self.drop_i(self.item_m(item_ids))
         prod = user_embeds * item_embeds
         
         out = torch.sum(prod, 1)
@@ -20,8 +22,8 @@ class MF(nn.Module):
     
 # Matrix factorization with user/item biases
 class MF_Bias(MF):
-    def __init__(self, n_users, n_items, K, G_b):
-        super().__init__(n_users, n_items, K)
+    def __init__(self, n_users, n_items, K, G_b, dropout = 0):
+        super().__init__(n_users, n_items, K, dropout)
 
         self.user_b = nn.Embedding(n_users, 1, dtype = torch.float64)
         self.item_b = nn.Embedding(n_items, 1, dtype = torch.float64)

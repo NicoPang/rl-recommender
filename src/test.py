@@ -12,11 +12,12 @@ from model.mf import MF_Bias
 from model.utility import RMSELoss
 from train.saving import save_model_results
 
-BATCH_SIZE = 64
-NUM_FEATURES = 10
-LEARNING_RATE = 0.0001
-EPOCHS = 25
-DECAY = 1e-3
+BATCH_SIZE = 256
+NUM_FEATURES = 8
+LEARNING_RATE = 0.0005
+EPOCHS = 20
+DECAY = 1e-4
+DROPOUT = 0.4
 
 if __name__ == '__main__':
     
@@ -36,7 +37,7 @@ if __name__ == '__main__':
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2)
     y_train, y_test = torch.tensor(y_train, dtype = torch.float64), torch.tensor(y_test, dtype = torch.float64)
     
-    model = MF_Bias(U_size, I_size, NUM_FEATURES, G_b)
+    model = MF_Bias(U_size, I_size, NUM_FEATURES, G_b, DROPOUT)
     loss_fn = RMSELoss()
     optimizer = Adam
 
@@ -52,7 +53,5 @@ if __name__ == '__main__':
         batch_size = BATCH_SIZE,
         max_epochs = EPOCHS
     )
-
-    print(list(regressor.get_all_learnable_params()))
     
-    save_model_results(regressor, x, y, f'../results/bs{BATCH_SIZE}K{NUM_FEATURES}LR{LEARNING_RATE}E{EPOCHS}D{DECAY}.npz')
+    save_model_results(regressor, x, y, f'../results/bs{BATCH_SIZE}K{NUM_FEATURES}LR{LEARNING_RATE}E{EPOCHS}D{DECAY}DR{DROPOUT}.npz')
