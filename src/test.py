@@ -12,11 +12,11 @@ from model.mf import MF_Bias
 from model.utility import RMSELoss
 from train.saving import save_model_results
 
-BATCH_SIZE = 256
-NUM_FEATURES = 8
+BATCH_SIZE = 64
+NUM_FEATURES = 10
 LEARNING_RATE = 0.0005
-EPOCHS = 20
-DECAY = 1e-4
+EPOCHS = 15
+DECAY = 1e-3
 DROPOUT = 0.4
 
 if __name__ == '__main__':
@@ -54,4 +54,4 @@ if __name__ == '__main__':
         max_epochs = EPOCHS
     )
     
-    save_model_results(regressor, x, y, f'../results/bs{BATCH_SIZE}K{NUM_FEATURES}LR{LEARNING_RATE}E{EPOCHS}D{DECAY}DR{DROPOUT}.npz')
+    save_model_results(regressor, x, y, f'bs{BATCH_SIZE}K{NUM_FEATURES}LR{LEARNING_RATE}E{EPOCHS}D{DECAY}DR{DROPOUT}')
