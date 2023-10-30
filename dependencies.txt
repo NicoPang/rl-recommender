@@ -4,3 +4,10 @@ numpy==1.26.0
 pandas==2.1.1
 skorch==0.15.0
 torch==2.1.0
+
+#John
+#I this not correct format, writing this as note to future self
+tensorflow: (https://developer.apple.com/metal/tensorflow-plugin/)
+pip install pyldavis #located in github notebook
+pip install chainer #located in requirements
+pip install spacy # ^

@@ -9,17 +9,27 @@ def sum_reviews_LDA(df: pd.DataFrame):
     grouped_review_df = grouped_review_df.reset_index(drop=True) 
     grouped_review_df =  grouped_review_df.sort_values(by='Item_ID')
     Item_ID_list = grouped_review_df['Review_Body'].tolist()
-    
+        
     # https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html#examples-using-sklearn-feature-extraction-text-countvectorizer
     vectorizer = CountVectorizer(encoding='utf-8',lowercase=True)
     X = vectorizer.fit_transform(Item_ID_list)
-    n = 10
+    topics_n = 10
+    top_n_words = 30
     
     # https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.LatentDirichletAllocation.html#sklearn.decomposition.LatentDirichletAllocation
-    lda = LatentDirichletAllocation(n_components=n, random_state=42, n_jobs=-1,)
+    lda = LatentDirichletAllocation(n_components=topics_n, random_state=42, n_jobs=-1)
     lda.fit(X)
     document_topics = lda.transform(X)
-
+    tf_feature_names = vectorizer.get_feature_names_out()
+    
+    top_words_per_topic = []
+    for topic in lda.components_:
+        top_word_indices = topic.argsort()[-top_n_words:][::-1]
+        top_words = [tf_feature_names[i] for i in top_word_indices]
+        top_words_per_topic.append(top_words)
+    
+    for i, words in enumerate(top_words_per_topic):
+        print(f"Topic {i + 1}: {', '.join(words)}")
     
     df = pd.DataFrame(document_topics)
     df.index.name = 'Item_ID'
@@ -32,7 +42,7 @@ def avg_reviews_LDA(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    import os
+    import os    
     subsets = { 'Toys_and_Games_5.json', 'reviews_Toys_and_Games.json',
             'Apps_for_Android_5.json','reviews_Apps_for_Android.json',
             'Health_and_Personal_Care_5.json','reviews_Health_and_Personal_Care.json'
@@ -58,7 +68,6 @@ if __name__ == '__main__':
                                 'overall': 'Review_Score'
                                 })
         total_df = pd.concat([df, total_df], axis=0)
-        break
     
     # (3) Create a mapping so we don't have to deal with random hashes for User_ID and Item_ID
     user_id_mapping = {user_id: idx for idx, user_id in enumerate(total_df['User_ID'].unique())}
