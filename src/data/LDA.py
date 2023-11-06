@@ -15,7 +15,6 @@ def sum_reviews_LDA(df: pd.DataFrame):
 
     # https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html#examples-using-sklearn-feature-extraction-text-countvectorizer
 
-    # vectorizer = CountVectorizer(encoding="utf-8", lowercase=True)
     vectorizer = TfidfVectorizer(encoding="utf-8", lowercase=True)
     X = vectorizer.fit_transform(Item_ID_list)
     topics_n = 10
