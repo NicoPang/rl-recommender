@@ -41,6 +41,14 @@ def sum_reviews_LDA(df: pd.DataFrame):
     return df
 
 
+def user_id_topics_avg(df_Item_topics: pd.DataFrame, df_user_item: pd.DataFrame):
+    df_user_item = df_user_item[["User_ID", "Item_ID"]]
+    merged_df = df_user_item.merge(df_Item_topics, on="Item_ID")
+    user_avg_features = merged_df.groupby("User_ID").mean().reset_index()
+    user_avg_features.drop("Item_ID", axis=1, inplace=True)
+    return user_avg_features
+
+
 if __name__ == "__main__":
     import os
 
@@ -98,7 +106,11 @@ if __name__ == "__main__":
 
     # (4) Testing LDA
     x = sum_reviews_LDA(total_df)
+    """
     total_df = pd.merge(total_df, x, on="Item_ID")
     total_df.set_index("User_ID", inplace=True)
     total_df = total_df.reset_index().sort_values(by="User_ID")
     total_df.head(100).to_csv("hi.csv", encoding="utf-8", escapechar="\\")
+    """
+    User_Topics = user_id_topics_avg(x, total_df)
+    User_Topics.to_csv("user_topics.csv", encoding="utf-8", escapechar="\\")

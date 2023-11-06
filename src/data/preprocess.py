@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
+import LDA
 
 
 def process_dataset():
@@ -13,9 +14,8 @@ def process_dataset():
         "reviews_Health_and_Personal_Care.json",
     }
     total_df = pd.DataFrame(
-        columns=["User_ID", "Item_ID", "Review_Score", "Review_Header", "Review_Body"]
+        columns=["User_ID", "Item_ID", "Review_Body", "Review_Score", "Review_Header"]
     )
-    total_df.set_index("User_ID", inplace=True)
 
     # (1) Check if datasets on system
     git_path = os.path.abspath(__file__)[
@@ -44,18 +44,24 @@ def process_dataset():
             }
         )
         total_df = pd.concat([df, total_df], axis=0)
+
+    # (3) Create a mapping so we don't have to deal with random hashes for User_ID and Item_ID
     user_id_mapping = {
         user_id: idx for idx, user_id in enumerate(total_df["User_ID"].unique())
     }
     total_df["User_ID"] = total_df["User_ID"].map(user_id_mapping)
+
     item_id_mapping = {
         user_id: idx for idx, user_id in enumerate(total_df["Item_ID"].unique())
     }
     total_df["Item_ID"] = total_df["Item_ID"].map(item_id_mapping)
+    print(total_df)
 
-    total_df.head(10).to_csv("hi.csv", encoding="utf-8", escapechar="\\")
+    Item_Topics = LDA.sum_reviews_LDA(total_df)
+    Item_Topics.to_csv("IT.csv", encoding="utf-8", escapechar="\\")
 
-    # total_df.to_csv('hi.csv', encoding='utf-8', escapechar='\\')
+    User_Topics = LDA.user_id_topics_avg(Item_Topics, total_df)
+    User_Topics.to_csv("UT.csv", encoding="utf-8", escapechar="\\")
 
 
 if __name__ == "__main__":
