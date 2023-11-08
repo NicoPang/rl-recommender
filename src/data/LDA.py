@@ -5,7 +5,7 @@ import pandas as pd
 
 
 # Sum the reviews into 1 document and then do LDA to get topics
-def sum_reviews_LDA(df: pd.DataFrame):
+def create_item_topics(df: pd.DataFrame):
     grouped_review_df = (
         df.groupby("Item_ID")["Review_Body"].apply(lambda x: " ".join(x)).reset_index()
     )
@@ -41,12 +41,40 @@ def sum_reviews_LDA(df: pd.DataFrame):
     return df
 
 
-def user_id_topics_avg(df_Item_topics: pd.DataFrame, df_user_item: pd.DataFrame):
-    df_user_item = df_user_item[["User_ID", "Item_ID"]]
-    merged_df = df_user_item.merge(df_Item_topics, on="Item_ID")
-    user_avg_features = merged_df.groupby("User_ID").mean().reset_index()
-    user_avg_features.drop("Item_ID", axis=1, inplace=True)
-    return user_avg_features
+def create_user_topics(df: pd.DataFrame):
+    grouped_review_df = (
+        df.groupby("User_ID")["Review_Body"].apply(lambda x: " ".join(x)).reset_index()
+    )
+    grouped_review_df = grouped_review_df.reset_index(drop=True)
+    grouped_review_df = grouped_review_df.sort_values(by="User_ID")
+    User_ID_list = grouped_review_df["Review_Body"].tolist()
+
+    # https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html#examples-using-sklearn-feature-extraction-text-countvectorizer
+
+    vectorizer = TfidfVectorizer(encoding="utf-8", lowercase=True)
+    X = vectorizer.fit_transform(User_ID_list)
+    topics_n = 10
+    top_n_words = 30
+
+    # https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.LatentDirichletAllocation.html#sklearn.decomposition.LatentDirichletAllocation
+    lda = LatentDirichletAllocation(n_components=topics_n, random_state=42, n_jobs=-1)
+    lda.fit(X)
+    document_topics = lda.transform(X)
+    tf_feature_names = vectorizer.get_feature_names_out()
+
+    top_words_per_topic = []
+    for topic in lda.components_:
+        top_word_indices = topic.argsort()[-top_n_words:][::-1]
+        top_words = [tf_feature_names[i] for i in top_word_indices]
+        top_words_per_topic.append(top_words)
+
+    for i, words in enumerate(top_words_per_topic):
+        print(f"Topic {i + 1}: {', '.join(words)}")
+
+    df = pd.DataFrame(document_topics)
+    df.index.name = "User_ID"
+
+    return df
 
 
 if __name__ == "__main__":
@@ -97,20 +125,19 @@ if __name__ == "__main__":
     user_id_mapping = {
         user_id: idx for idx, user_id in enumerate(total_df["User_ID"].unique())
     }
+    pd.DataFrame(data=user_id_mapping.keys()).to_excel("user_mappings.xlsx")
     total_df["User_ID"] = total_df["User_ID"].map(user_id_mapping)
 
     item_id_mapping = {
         user_id: idx for idx, user_id in enumerate(total_df["Item_ID"].unique())
     }
+    pd.DataFrame(data=item_id_mapping.keys()).to_excel("item_mappings.xlsx")
     total_df["Item_ID"] = total_df["Item_ID"].map(item_id_mapping)
 
     # (4) Testing LDA
-    x = sum_reviews_LDA(total_df)
-    """
-    total_df = pd.merge(total_df, x, on="Item_ID")
-    total_df.set_index("User_ID", inplace=True)
-    total_df = total_df.reset_index().sort_values(by="User_ID")
-    total_df.head(100).to_csv("hi.csv", encoding="utf-8", escapechar="\\")
-    """
-    User_Topics = user_id_topics_avg(x, total_df)
-    User_Topics.to_csv("user_topics.csv", encoding="utf-8", escapechar="\\")
+    Item_Topic = create_item_topics(total_df)
+    Item_Topic.to_excel("user_topics.xlsx")
+
+    User_Topics = create_user_topics(total_df)
+    User_Topics.to_excel("user_topics.xlsx")
+    total_df.to_excel("total_df.xlsx")
