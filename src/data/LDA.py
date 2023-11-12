@@ -50,6 +50,7 @@ def create_topics(pth: str, df: pd.DataFrame, s: str, n: int):
     document_topics = lda.transform(X)
     tf_feature_names = vectorizer.get_feature_names_out()
 
+    apple = os.path.join(pth, "datasets", "processed", "lda", f"{s}_topics.txt")
     with open(
         os.path.join(pth, "datasets", "processed", "lda", f"{s}_topics.txt"), "w"
     ) as f_file:
@@ -109,7 +110,6 @@ def preprocess_text(dataset: set, pth: str, n_topics: int):
     )
     total_df.to_csv(
         os.path.join(pth, "datasets", "processed", "lda", "total_df.csv.gz"),
-        compression="gzip",
         escapechar="\\",
     )
 
@@ -119,7 +119,6 @@ def preprocess_text(dataset: set, pth: str, n_topics: int):
     }
     pd.DataFrame(data=user_id_mapping.keys()).to_csv(
         os.path.join(pth, "datasets", "processed", "lda", "user_mappings.csv.gz"),
-        compression="gzip",
     )
     total_df["User_ID"] = total_df["User_ID"].map(user_id_mapping)
     del user_id_mapping
@@ -129,7 +128,6 @@ def preprocess_text(dataset: set, pth: str, n_topics: int):
     }
     pd.DataFrame(data=item_id_mapping.keys()).to_csv(
         os.path.join(pth, "datasets", "processed", "lda", "item_mappings.csv.gz"),
-        compression="gzip",
     )
     total_df["Item_ID"] = total_df["Item_ID"].map(item_id_mapping)
     del item_id_mapping
