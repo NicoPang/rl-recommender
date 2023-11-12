@@ -1,5 +1,8 @@
+from sklearn.decomposition import LatentDirichletAllocation
+
 import torch
 import torch.nn as nn
+from skorch import NeuralNetRegressor
 
 class MF(nn.Module):
     def __init__(self, n_users, n_items, K, dropout = 0):
@@ -19,6 +22,12 @@ class MF(nn.Module):
         out = torch.sum(prod, 1)
         
         return out
+    
+    def get_user_embeds(self):
+        return self.user_m.weight
+    
+    def get_item_embeds(self):
+        return self.item_m.weight
     
 # Matrix factorization with user/item biases
 class MF_Bias(MF):
@@ -43,3 +52,18 @@ class MF_Bias(MF):
         out += user_biases + item_biases + self.G_b
 
         return out
+    
+class LDANet(NeuralNetRegressor):
+    def __init__(self, n_topics, document_word, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.document_word = document_word
+        self.LDA = LatentDirichletAllocation(n_topics).fit(document_word)
+        print('Done fitting')
+
+
+    def get_loss(self, y_pred, y_true, X = None, training = False):
+        print('Calculating loss')
+        loss = super().get_loss(y_pred, y_true, X = X, training = training)
+        loss = loss + self.LDA._perplexity_precomp_distr(self.document_word, doc_topic_distr = self.module.get_item_embeds().clone().detach().numpy())
+        print(loss)
+        return loss

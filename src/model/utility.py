@@ -9,5 +9,4 @@ class RMSELoss(nn.Module):
     
     def forward(self, pred, true):
         loss = torch.sqrt(self.mse(pred, true) + self.epsilon)
-
         return loss
