@@ -167,3 +167,4 @@ datasets/*
 results/*
 !datasets/raw/.gitignore
 !datasets/processed/.gitignore
+!results/.gitignore

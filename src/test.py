@@ -7,9 +7,10 @@ from torch.utils.data import random_split, TensorDataset, DataLoader
 
 from skorch import NeuralNetRegressor
 from sklearn.model_selection import train_test_split, GridSearchCV
+from skorch.callbacks import EpochScoring
 
 from model.mf import MF_Bias
-from model.utility import RMSELoss
+from model.utility import RMSELoss, RMSE
 from train.saving import save_model_results
 
 BATCH_SIZE = 64
@@ -51,7 +52,11 @@ if __name__ == '__main__':
         ],
         optimizer__lr = LEARNING_RATE,
         batch_size = BATCH_SIZE,
-        max_epochs = EPOCHS
+        max_epochs = EPOCHS,
+        callbacks = [
+            ('train_rmse', EpochScoring(RMSE, name = 'train_rmse', on_train = True)),
+            ('test_rmse', EpochScoring(RMSE, name = 'test_rmse'))
+        ]
     )
     
     print(regressor.module.user_m.weight.size())

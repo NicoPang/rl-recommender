@@ -1,3 +1,4 @@
+import numpy as np
 from sklearn.decomposition import LatentDirichletAllocation
 
 import torch
@@ -54,16 +55,17 @@ class MF_Bias(MF):
         return out
     
 class LDANet(NeuralNetRegressor):
-    def __init__(self, n_topics, document_word, *args, **kwargs):
+    def __init__(self, n_topics, alpha, document_word, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.document_word = document_word
         self.LDA = LatentDirichletAllocation(n_topics).fit(document_word)
+        self.alpha = alpha
         print('Done fitting')
 
-
     def get_loss(self, y_pred, y_true, X = None, training = False):
-        print('Calculating loss')
+        # print('Calculating loss')
         loss = super().get_loss(y_pred, y_true, X = X, training = training)
-        loss = loss + self.LDA._perplexity_precomp_distr(self.document_word, doc_topic_distr = self.module.get_item_embeds().clone().detach().numpy())
-        print(loss)
+        perp = -1 * np.log(self.LDA._perplexity_precomp_distr(self.document_word, doc_topic_distr = self.module.get_item_embeds().clone().detach().numpy()) + 1e-307)
+        loss = loss - self.alpha * perp
+        # print(loss)
         return loss
