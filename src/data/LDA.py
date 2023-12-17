@@ -39,7 +39,7 @@ def create_topics(pth: str, df: pd.DataFrame, s: str, n: int):
     s_list = grouped_review_df["Review_Body"].tolist()
 
     # https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html#examples-using-sklearn-feature-extraction-text-countvectorizer
-    vectorizer = TfidfVectorizer(encoding="utf-8", lowercase=True)
+    vectorizer = TfidfVectorizer(encoding="utf-8", stop_words="english", lowercase=True)
     X = vectorizer.fit_transform(s_list)
     topics_n = n
     top_n_words = 30
