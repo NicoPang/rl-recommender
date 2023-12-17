@@ -19,11 +19,12 @@ EPOCHS = 15
 DECAY = 1e-3
 DROPOUT = 0.4
 LDA_ALPHA = 0.001
+# LDA_ALPHA = 0
 
 if __name__ == '__main__':
-    
-    data = np.load('../datasets/processed/games_ratings.npz')
-    review_data_df = pd.read_csv('../datasets/processed/games_I_reviews.csv', escapechar = '\\')
+    keyword = 'all'
+    data = np.load(f'../datasets/processed/{keyword}_ratings.npz')
+    review_data_df = pd.read_csv(f'../datasets/processed/{keyword}_I_reviews.csv', escapechar = '\\')
     print(len(review_data_df))
     review_data = review_data_df['reviewText'].tolist()
     x = data['x']
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     print(G_b)
 
     # LDA
-    vectorizer = TfidfVectorizer(encoding="utf-8", lowercase=True)
+    vectorizer = TfidfVectorizer(encoding="utf-8", stop_words = 'english', lowercase=True)
     document_word = vectorizer.fit_transform(review_data)
     # document_word = None
 
@@ -69,4 +70,4 @@ if __name__ == '__main__':
         ]
     )
     
-    save_model_results(regressor, x, y, f'bs{BATCH_SIZE}K{NUM_FEATURES}LR{LEARNING_RATE}E{EPOCHS}D{DECAY}DR{DROPOUT}ALPH{LDA_ALPHA}')
+    save_model_results(regressor, x, y, f'{keyword}_bs{BATCH_SIZE}K{NUM_FEATURES}LR{LEARNING_RATE}E{EPOCHS}D{DECAY}DR{DROPOUT}ALPH{LDA_ALPHA}')
